@@ -49,7 +49,7 @@ export default function Home() {
           <StepSection
             step={2}
             title="② 영역 지정 및 분석"
-            done={regionDone}
+            done={axisDone}
             summary="✓ 영역 지정 및 분석 완료"
           >
             <RegionPanel />
