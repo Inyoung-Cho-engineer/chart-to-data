@@ -49,6 +49,21 @@ function manhattan(r: number, g: number, b: number, c: Rgb) {
   return Math.abs(r - c.r) + Math.abs(g - c.g) + Math.abs(b - c.b);
 }
 
+// 색기(色氣) — 채널 최대·최소 차이. 0에 가까우면 회색·검정 같은 무채색이다.
+function chroma(c: Rgb) {
+  return Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b);
+}
+
+const NEUTRAL_CHROMA = 20; // 이보다 색기가 옅으면 무채색(축 선·격자선·글자)으로 본다
+const CHROMATIC_CHROMA = 30; // 계열 색이 이보다 뚜렷하면 무채색과 절대 같은 선으로 묶지 않는다
+
+function isNeutral(c: Rgb) {
+  return chroma(c) < NEUTRAL_CHROMA;
+}
+function isChromatic(c: Rgb) {
+  return chroma(c) >= CHROMATIC_CHROMA;
+}
+
 // AI가 알려준 색은 눈대중이라 실제와 꽤 다르다 (실측: 실제 #1f77b4인 선을 #00aaff로 답함).
 // 그 색을 그대로 쓰면 선 픽셀이 회색 축선과 구분되지 않아 추적이 통째로 실패한다.
 // 그래서 AI 색은 **힌트로만** 쓰고, 이미지에 실제로 존재하는 색들 중 힌트에 가장 가까운 것을 target으로 삼는다.
@@ -98,10 +113,18 @@ export function buildPalette(plot: PlotPixels): Rgb[] {
 }
 
 // 팔레트에서 힌트에 가장 가까운 색을 고른다.
+// AI가 알려준 색이 뚜렷한 유채색이면 무채색(축 선·격자선 회색)은 아예 후보에서 뺀다 —
+// 선이 흐리게 그려진 그래프에서 회색이 "가장 가까운 색"으로 뽑혀 축을 따라가는 일을 막는다.
+// 흑백 그래프처럼 힌트 자체가 무채색이면 이 걸러내기는 적용하지 않는다.
 export function pickNearestColor(palette: Rgb[], hint: Rgb): Rgb {
+  const candidates =
+    isChromatic(hint) && palette.some((c) => !isNeutral(c))
+      ? palette.filter((c) => !isNeutral(c))
+      : palette;
+
   let best = hint;
   let bestDistance = Infinity;
-  for (const c of palette) {
+  for (const c of candidates) {
     const d = manhattan(c.r, c.g, c.b, hint);
     if (d < bestDistance) {
       bestDistance = d;
@@ -210,9 +233,18 @@ function findRunsWidening(plot: PlotPixels, target: Rgb, rivals: Rgb[], centerCo
 // 반대로 팔레트를 통째로 후보에 넣으면, 같은 선의 안티에일리어싱 명암끼리 경쟁해 선 가장자리를
 // 놓친다(실측: 50지점 중 27개만 찾음). 그래서 **target에서 MERGE_DISTANCE 안쪽인 색은 같은 선으로
 // 보고 후보에서 뺀다.** 다른 계열은 그보다 멀리 있으므로 그대로 구분된다.
+//
+// 다만 거리만으로 묶으면 **연한 회색이 "같은 선의 흐린 부분"으로 오해된다.** 실측(2026-08-14):
+// 계열 색이 (64,124,160)일 때 축 선 회색 (134,134,134)의 맨해튼 거리가 106이라 MERGE_DISTANCE(110)
+// 안쪽으로 들어와 후보에서 빠졌고, 그 결과 50지점 전부가 축 선을 따라가 Y축 최솟값으로 나왔다.
+// 그래서 계열 색이 뚜렷한 유채색이면 무채색은 거리와 상관없이 항상 후보(rival)로 남긴다.
 export function buildRivalColors(palette: Rgb[], target: Rgb): Rgb[] {
-  const others = palette.filter((c) => manhattan(c.r, c.g, c.b, target) > MERGE_DISTANCE);
-  const extras = NON_DATA_COLORS.filter((n) => manhattan(n.r, n.g, n.b, target) > MERGE_DISTANCE);
+  const targetIsChromatic = isChromatic(target);
+  const sameLine = (c: Rgb) =>
+    manhattan(c.r, c.g, c.b, target) <= MERGE_DISTANCE && !(targetIsChromatic && isNeutral(c));
+
+  const others = palette.filter((c) => !sameLine(c));
+  const extras = NON_DATA_COLORS.filter((n) => !sameLine(n));
   return [...others, ...extras];
 }
 

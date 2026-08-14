@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { useSessionStore } from '@/store/session';
-import { generateTxList, tFromValue, toDataPoint } from '@/lib/axis';
+import { frameTxFromAxisTx, generateTxList, tFromValue, toDataPoint } from '@/lib/axis';
 import {
   buildPalette,
   buildRivalColors,
@@ -31,7 +31,9 @@ export function ExtractPanel() {
 
   const file = useSessionStore((s) => s.file);
   const cropImage = useSessionStore((s) => s.cropImage);
+  const traceImage = useSessionStore((s) => s.traceImage);
   const plotBox = useSessionStore((s) => s.plotBox);
+  const calibration = useSessionStore((s) => s.calibration);
   const xAxis = useSessionStore((s) => s.xAxis);
   const yAxis = useSessionStore((s) => s.yAxis);
   const seriesList = useSessionStore((s) => s.seriesList);
@@ -62,11 +64,12 @@ export function ExtractPanel() {
   }
 
   async function handleExtract() {
-    if (!cropImage || !plotBox || !series || !xAxis || !yAxis) return;
+    const source = traceImage ?? cropImage;
+    if (!source || !plotBox || !series || !xAxis || !yAxis) return;
     setExtracting(true);
     setError(null);
     try {
-      const plot = await loadPlotPixels(cropImage, plotBox);
+      const plot = await loadPlotPixels(source, plotBox);
       const colors = resolveColors(plot);
       if (!colors) {
         // 색상 형식이 이상하면 추적할 기준이 없다 — 영역 단계 문제로 안내한다.
@@ -75,12 +78,24 @@ export function ExtractPanel() {
       }
       const { target, rivals: rivalColors } = colors;
       const txList = generateTxList(SAMPLE_COUNT);
+      // 축 위치(0~1)를 plotBox 안의 실제 가로 위치로 옮긴다 — 눈금이 테두리보다 안쪽에 있기 때문이다.
+      const frameTxList = txList.map((tx) => frameTxFromAxisTx(calibration, tx));
 
       // 지점을 하나씩 따로 보지 않고 한 번에 추적한다 — 앞뒤 지점과 이어지는지를 보고
       // 범례 선·다른 계열로 튀는 것을 막고, 점선의 빈 칸도 좌우로 넓혀 찾는다 (DESIGN.md §5.5).
-      const traced = traceSeries(plot, target, rivalColors, txList);
+      const traced = traceSeries(plot, target, rivalColors, frameTxList);
       const newPoints = txList.map((tx, i) =>
-        toDataPoint(tx, traced[i].ty, traced[i].confidence, xAxis, yAxis, crossings, series.id, 'grid')
+        toDataPoint(
+          tx,
+          traced[i].ty,
+          traced[i].confidence,
+          xAxis,
+          yAxis,
+          crossings,
+          series.id,
+          'grid',
+          calibration
+        )
       );
       setPoints(newPoints);
     } catch {
@@ -91,7 +106,8 @@ export function ExtractPanel() {
   }
 
   async function handleQueryPoint() {
-    if (!cropImage || !plotBox || !series || !xAxis || !yAxis) return;
+    const source = traceImage ?? cropImage;
+    if (!source || !plotBox || !series || !xAxis || !yAxis) return;
     const value = Number(queryX);
     if (!Number.isFinite(value)) return;
 
@@ -108,14 +124,14 @@ export function ExtractPanel() {
     setQueryLoading(true);
     setError(null);
     try {
-      const plot = await loadPlotPixels(cropImage, plotBox);
+      const plot = await loadPlotPixels(source, plotBox);
       const colors = resolveColors(plot);
       if (!colors) {
         setError(makeAppError('REGION_NO_CHART'));
         return;
       }
 
-      const traced = traceAt(plot, colors.target, colors.rivals, tx);
+      const traced = traceAt(plot, colors.target, colors.rivals, frameTxFromAxisTx(calibration, tx));
       const newPoint = toDataPoint(
         tx,
         traced.ty,
@@ -124,7 +140,8 @@ export function ExtractPanel() {
         yAxis,
         crossings,
         series.id,
-        'user_query'
+        'user_query',
+        calibration
       );
       setPoints([...points, newPoint]);
       setQueryX('');

@@ -7,8 +7,9 @@
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { useSessionStore } from '@/store/session';
 import { loadPdf } from '@/lib/pdf';
-import { cropImageToDataUrl } from '@/lib/crop';
+import { cropImageForTrace, cropImageToDataUrl } from '@/lib/crop';
 import { makeAppError } from '@/lib/errors';
+import { IDENTITY_CALIBRATION } from '@/lib/types';
 
 const MIN_SELECTION_PX = 100; // DESIGN.md §3.4 ② — 가로·세로 100px 미만이면 너무 작다고 안내
 
@@ -43,7 +44,9 @@ export function ImageViewer() {
   const setCurrentPage = useSessionStore((s) => s.setCurrentPage);
   const setCropRect = useSessionStore((s) => s.setCropRect);
   const setCropImage = useSessionStore((s) => s.setCropImage);
+  const setTraceImage = useSessionStore((s) => s.setTraceImage);
   const setPlotBox = useSessionStore((s) => s.setPlotBox);
+  const setCalibration = useSessionStore((s) => s.setCalibration);
   const setXAxis = useSessionStore((s) => s.setXAxis);
   const setYAxis = useSessionStore((s) => s.setYAxis);
   const setSeriesList = useSessionStore((s) => s.setSeriesList);
@@ -55,6 +58,7 @@ export function ImageViewer() {
   // 영역을 새로 그리거나 페이지를 넘기면 이전 판독 결과는 더 이상 맞지 않으므로 함께 지운다.
   function clearAnalysisResult() {
     setPlotBox(null);
+    setCalibration(IDENTITY_CALIBRATION);
     setXAxis(null);
     setYAxis(null);
     setSeriesList([]);
@@ -87,6 +91,7 @@ export function ImageViewer() {
     if (pxWidth < MIN_SELECTION_PX || pxHeight < MIN_SELECTION_PX) {
       setCropRect(null);
       setCropImage(null);
+      setTraceImage(null);
       clearAnalysisResult();
       setError(makeAppError('REGION_TOO_SMALL'));
       return;
@@ -97,11 +102,17 @@ export function ImageViewer() {
 
     if (!pageImage) return;
     try {
-      const dataUrl = await cropImageToDataUrl(pageImage, rect);
-      setCropImage(dataUrl);
+      // 서버로 보낼 조각(줄인 JPEG)과 앱이 픽셀을 추적할 조각(원본 해상도 PNG)을 따로 만든다.
+      const [forServer, forTrace] = await Promise.all([
+        cropImageToDataUrl(pageImage, rect),
+        cropImageForTrace(pageImage, rect),
+      ]);
+      setCropImage(forServer);
+      setTraceImage(forTrace);
     } catch {
       // 자르기 자체가 실패하면(예: 손상된 이미지) 영역 단계 문제로 안내한다.
       setCropImage(null);
+      setTraceImage(null);
       setError(makeAppError('REGION_NO_CHART'));
     }
   }
@@ -149,6 +160,7 @@ export function ImageViewer() {
       setCurrentPage(page);
       setCropRect(null); // 페이지가 바뀌면 이전 페이지에서 그린 영역·판독 결과는 의미가 없다
       setCropImage(null);
+      setTraceImage(null);
       clearAnalysisResult();
     } finally {
       setMoving(false);
@@ -162,6 +174,7 @@ export function ImageViewer() {
     setDragAnchor(point);
     setCropRect(null);
     setCropImage(null);
+    setTraceImage(null);
     clearAnalysisResult();
     setError(null);
   }

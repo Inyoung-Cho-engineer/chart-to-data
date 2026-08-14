@@ -29,42 +29,30 @@
     ctx.fillStyle = '#333';
     ctx.lineWidth = 1;
 
-    // X 눈금 5칸
-    for (let i = 0; i <= 5; i++) {
-      const v = xMin + ((xMax - xMin) * i) / 5;
-      const px = PLOT.x + (PLOT.w * i) / 5;
+    // 눈금 위치는 값 → 픽셀 변환으로 정한다 — margin이 있으면 테두리보다 안쪽에 찍힌다
+    const toPx = makeToPx(spec);
+
+    // X 눈금
+    tickValues(spec, 'x').forEach((v) => {
+      const px = toPx(v, yMin)[0];
       ctx.beginPath();
       ctx.moveTo(px, PLOT.y + PLOT.h);
       ctx.lineTo(px, PLOT.y + PLOT.h + 6);
       ctx.stroke();
       ctx.textAlign = 'center';
       ctx.fillText(String(+v.toFixed(3)), px, PLOT.y + PLOT.h + 22);
-    }
+    });
+
     // Y 눈금
-    if (yLog) {
-      const decades = Math.round(Math.log10(yMax) - Math.log10(yMin));
-      for (let d = 0; d <= decades; d++) {
-        const v = yMin * Math.pow(10, d);
-        const py = PLOT.y + PLOT.h - (PLOT.h * d) / decades;
-        ctx.beginPath();
-        ctx.moveTo(PLOT.x - 6, py);
-        ctx.lineTo(PLOT.x, py);
-        ctx.stroke();
-        ctx.textAlign = 'right';
-        ctx.fillText(String(+v.toPrecision(3)), PLOT.x - 10, py + 4);
-      }
-    } else {
-      for (let i = 0; i <= 5; i++) {
-        const v = yMin + ((yMax - yMin) * i) / 5;
-        const py = PLOT.y + PLOT.h - (PLOT.h * i) / 5;
-        ctx.beginPath();
-        ctx.moveTo(PLOT.x - 6, py);
-        ctx.lineTo(PLOT.x, py);
-        ctx.stroke();
-        ctx.textAlign = 'right';
-        ctx.fillText(String(+v.toFixed(2)), PLOT.x - 10, py + 4);
-      }
-    }
+    tickValues(spec, 'y').forEach((v) => {
+      const py = toPx(xMin, v)[1];
+      ctx.beginPath();
+      ctx.moveTo(PLOT.x - 6, py);
+      ctx.lineTo(PLOT.x, py);
+      ctx.stroke();
+      ctx.textAlign = 'right';
+      ctx.fillText(String(yLog ? +v.toPrecision(3) : +v.toFixed(2)), PLOT.x - 10, py + 4);
+    });
 
     ctx.textAlign = 'center';
     ctx.fillText(xUnit, PLOT.x + PLOT.w / 2, PLOT.y + PLOT.h + 44);
@@ -75,33 +63,63 @@
     ctx.restore();
   }
 
-  function drawGrid(ctx) {
+  // 격자선은 눈금 위치에 그린다. 테두리와 겹치는 것(여백이 없을 때의 양 끝)은 건너뛴다.
+  function drawGrid(ctx, spec) {
+    const toPx = makeToPx(spec);
     ctx.strokeStyle = '#dddddd';
     ctx.lineWidth = 1;
-    for (let i = 1; i < 5; i++) {
-      const px = PLOT.x + (PLOT.w * i) / 5;
+
+    tickValues(spec, 'x').forEach((v) => {
+      const px = toPx(v, spec.yMin)[0];
+      if (px <= PLOT.x + 1 || px >= PLOT.x + PLOT.w - 1) return;
       ctx.beginPath();
       ctx.moveTo(px, PLOT.y);
       ctx.lineTo(px, PLOT.y + PLOT.h);
       ctx.stroke();
-      const py = PLOT.y + (PLOT.h * i) / 5;
+    });
+    tickValues(spec, 'y').forEach((v) => {
+      const py = toPx(spec.xMin, v)[1];
+      if (py <= PLOT.y + 1 || py >= PLOT.y + PLOT.h - 1) return;
       ctx.beginPath();
       ctx.moveTo(PLOT.x, py);
       ctx.lineTo(PLOT.x + PLOT.w, py);
       ctx.stroke();
-    }
+    });
   }
 
   // 값 → 픽셀
+  //
+  // spec.margin(0~)을 주면 눈금 범위 바깥으로 그만큼 여백을 두고 테두리를 그린다.
+  // matplotlib 기본값(5%)과 같은 모양으로, **테두리와 눈금 범위가 다른** 실제 논문 그래프를 흉내 낸다.
   function makeToPx(spec) {
     const { xMin, xMax, yMin, yMax, yLog } = spec;
+    const m = spec.margin || 0;
+    const lo = (min, max) => min - (max - min) * m;
+    const hi = (min, max) => max + (max - min) * m;
+
+    const xLo = lo(xMin, xMax);
+    const xHi = hi(xMin, xMax);
+    const yLo = yLog ? lo(Math.log10(yMin), Math.log10(yMax)) : lo(yMin, yMax);
+    const yHi = yLog ? hi(Math.log10(yMin), Math.log10(yMax)) : hi(yMin, yMax);
+
     return (xv, yv) => {
-      const tx = (xv - xMin) / (xMax - xMin);
-      const ty = yLog
-        ? (Math.log10(yv) - Math.log10(yMin)) / (Math.log10(yMax) - Math.log10(yMin))
-        : (yv - yMin) / (yMax - yMin);
+      const tx = (xv - xLo) / (xHi - xLo);
+      const yRaw = yLog ? Math.log10(yv) : yv;
+      const ty = (yRaw - yLo) / (yHi - yLo);
       return [PLOT.x + PLOT.w * tx, PLOT.y + PLOT.h - PLOT.h * ty];
     };
+  }
+
+  // 축에 붙일 눈금 값 목록 (5칸)
+  function tickValues(spec, axis) {
+    if (axis === 'x') {
+      return Array.from({ length: 6 }, (_, i) => spec.xMin + ((spec.xMax - spec.xMin) * i) / 5);
+    }
+    if (spec.yLog) {
+      const decades = Math.round(Math.log10(spec.yMax) - Math.log10(spec.yMin));
+      return Array.from({ length: decades + 1 }, (_, d) => spec.yMin * Math.pow(10, d));
+    }
+    return Array.from({ length: 6 }, (_, i) => spec.yMin + ((spec.yMax - spec.yMin) * i) / 5);
   }
 
   function drawSeries(ctx, spec, series) {
@@ -164,7 +182,7 @@
     ctx.textAlign = 'center';
     ctx.fillText(spec.title, W / 2, 40);
 
-    if (spec.grid) drawGrid(ctx);
+    if (spec.grid) drawGrid(ctx, spec);
     drawAxes(ctx, spec, { frame: !!spec.frame });
     spec.series.forEach((s) => drawSeries(ctx, spec, s));
     if (spec.legend !== 'none') drawLegend(ctx, spec, spec.legend === 'inside');
@@ -248,6 +266,53 @@
       xMin: 0, xMax: 5, yMin: 0, yMax: 100, xUnit: 'Voltage (V)', yUnit: 'Current (mA)',
       legend: 'none',
       series: [{ id: 's1', label: 'I-V', color: '#e377c2', f: (x) => Math.min(98, 2 + 1.6 * Math.pow(x, 3.2)) }],
+    },
+
+    // ───────────────────────────────────────────────────────────
+    // R1~R4 — 실제 논문에 실리는 모양 (2026-08-14 추가)
+    //
+    // C1~C8은 테두리가 곧 축 최솟값~최댓값이라, "테두리 ≠ 눈금 범위"인 실제 그래프에서
+    // 값이 크게 틀어지는 문제를 잡아내지 못했다. matplotlib 기본값처럼 양옆에 5% 여백을 둔
+    // 그래프를 추가해 그 경우를 검사한다.
+    // ───────────────────────────────────────────────────────────
+    {
+      id: 'r1-margin-two-series',
+      title: 'R1. Margins, Grid, Legend Inside (paper style)',
+      risk: '테두리보다 눈금이 안쪽 + 그래프 안 범례',
+      xMin: 0, xMax: 20, yMin: 1, yMax: 7, xUnit: 'Time (s)', yUnit: 'Value',
+      margin: 0.08, grid: true, frame: true, legend: 'inside',
+      series: [
+        { id: 's1', label: 'Condition-A', color: '#1f77b4', lineWidth: 2, f: (x) => Math.exp(0.1 * x) },
+        { id: 's2', label: 'Condition-B', color: '#ff7f0e', lineWidth: 2, f: (x) => 0.65 * Math.exp(0.0915 * x) },
+      ],
+    },
+    {
+      id: 'r2-margin-log',
+      title: 'R2. Margins with Log Y Axis',
+      risk: '여백 + 로그 축',
+      xMin: 0, xMax: 100, yMin: 0.01, yMax: 100, yLog: true, xUnit: 'Load (N)', yUnit: 'Strain',
+      margin: 0.05, grid: true, frame: true, legend: 'none',
+      series: [{ id: 's1', label: 'Strain', color: '#2ca02c', lineWidth: 2, f: (x) => 0.02 * Math.pow(10, (3 * x) / 100) }],
+    },
+    {
+      id: 'r3-margin-overshoot',
+      title: 'R3. Curve Rising Above the Top Tick',
+      risk: '곡선이 최댓값 눈금 위로 올라감 (여백 안)',
+      xMin: 0, xMax: 10, yMin: 0, yMax: 50, xUnit: 'X', yUnit: 'Y',
+      margin: 0.05, grid: true, frame: true, legend: 'none',
+      series: [{ id: 's1', label: 'Curve', color: '#d62728', lineWidth: 2, f: (x) => 1 + 0.05 * x * x * x }],
+    },
+    {
+      id: 'r4-margin-thin-lines',
+      title: 'R4. Thin Lines, Three Series, Margins',
+      risk: '얇은 선 3개 + 여백 (색 구분이 어려운 조건)',
+      xMin: 0, xMax: 50, yMin: 0, yMax: 100, xUnit: 'Cycle', yUnit: 'Capacity (%)',
+      margin: 0.05, grid: true, frame: true, legend: 'outside',
+      series: [
+        { id: 's1', label: 'Type A', color: '#1f77b4', lineWidth: 1.2, f: (x) => 95 - 0.8 * x },
+        { id: 's2', label: 'Type B', color: '#d62728', lineWidth: 1.2, f: (x) => 90 - 1.2 * x + 0.008 * x * x },
+        { id: 's3', label: 'Type C', color: '#2ca02c', lineWidth: 1.2, f: (x) => 85 - 0.4 * x },
+      ],
     },
   ];
 

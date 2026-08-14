@@ -5,12 +5,14 @@
 
 import { create } from 'zustand';
 import type {
+  AxisCalibration,
   AxisInfo,
   Series,
   DataPoint,
   AppError,
   NormalizedRect,
 } from '@/lib/types';
+import { IDENTITY_CALIBRATION } from '@/lib/types';
 
 interface SessionState {
   file: { name: string; pageCount: number; raw: File } | null;
@@ -18,10 +20,12 @@ interface SessionState {
   pageImage: string | null; // 화면에 띄운 페이지 그림 (원본 페이지 전체)
   currentPage: number; // 지금 보고 있는 페이지 (1부터 시작, PDF 아니면 항상 1)
   cropRect: NormalizedRect | null; // pageImage 기준 드래그 영역
-  cropImage: string | null; // 잘라낸 영역 조각 (API 호출마다 함께 보냄)
+  cropImage: string | null; // 잘라낸 영역 조각 (API 호출마다 함께 보냄) — 줄이고 압축한 것
+  traceImage: string | null; // 같은 영역을 원본 해상도·무손실로 잘라낸 것. 픽셀 추적 전용, 서버로 보내지 않는다
   xAxis: AxisInfo | null;
   yAxis: AxisInfo | null;
-  plotBox: NormalizedRect | null; // cropImage 기준 그래프 안쪽 영역
+  plotBox: NormalizedRect | null; // cropImage 기준 그래프 안쪽 영역(테두리)
+  calibration: AxisCalibration; // plotBox 안에서 축 최솟값·최댓값 눈금이 있는 위치
   seriesList: Series[];
   selectedSeriesId: string | null;
   crossings: Array<{ tx: number; seriesIds: string[] }>;
@@ -35,9 +39,11 @@ interface SessionActions {
   setCurrentPage: (page: number) => void;
   setCropRect: (rect: NormalizedRect | null) => void;
   setCropImage: (image: string | null) => void;
+  setTraceImage: (image: string | null) => void;
   setXAxis: (axis: AxisInfo | null) => void;
   setYAxis: (axis: AxisInfo | null) => void;
   setPlotBox: (box: NormalizedRect | null) => void;
+  setCalibration: (calibration: AxisCalibration) => void;
   setSeriesList: (list: Series[]) => void;
   setSelectedSeriesId: (id: string | null) => void;
   setCrossings: (crossings: SessionState['crossings']) => void;
@@ -52,9 +58,11 @@ const initialState: SessionState = {
   currentPage: 1,
   cropRect: null,
   cropImage: null,
+  traceImage: null,
   xAxis: null,
   yAxis: null,
   plotBox: null,
+  calibration: IDENTITY_CALIBRATION,
   seriesList: [],
   selectedSeriesId: null,
   crossings: [],
@@ -69,9 +77,11 @@ export const useSessionStore = create<SessionState & SessionActions>()((set) => 
   setCurrentPage: (currentPage) => set({ currentPage }),
   setCropRect: (cropRect) => set({ cropRect }),
   setCropImage: (cropImage) => set({ cropImage }),
+  setTraceImage: (traceImage) => set({ traceImage }),
   setXAxis: (xAxis) => set({ xAxis }),
   setYAxis: (yAxis) => set({ yAxis }),
   setPlotBox: (plotBox) => set({ plotBox }),
+  setCalibration: (calibration) => set({ calibration }),
   setSeriesList: (seriesList) => set({ seriesList }),
   setSelectedSeriesId: (selectedSeriesId) => set({ selectedSeriesId }),
   setCrossings: (crossings) => set({ crossings }),

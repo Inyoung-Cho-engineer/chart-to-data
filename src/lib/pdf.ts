@@ -3,6 +3,16 @@
 // Next.js가 이 컴포넌트를 서버에서 미리 그릴 때(SSR) 함께 실행되면 오류가 난다.
 // 그래서 최상단에서 import하지 않고, 실제로 함수가 호출될 때(=브라우저에서 파일을 고른 뒤)만 불러온다.
 
+// 페이지를 그릴 때 긴 변이 이 정도 픽셀이 되도록 배율을 정한다.
+//
+// 왜 이렇게 크게 그리나: 배율 1.5로 그리면 논문 속 작은 그래프의 선이 1픽셀도 안 되게 그려져
+// 안티에일리어싱으로 흰색과 섞여버린다. 실측(2026-08-14)에서 파란 계열(#1f77b4)의 실제 색이
+// 그래프 전체에 6픽셀밖에 남지 않아, 색으로 선을 따라가는 방식이 축 선을 데이터로 오인했다.
+// 긴 변 3000픽셀로 그리면 같은 그래프에서 1369픽셀이 남아 색 구분이 확실해진다.
+const TARGET_LONG_SIDE = 3000;
+const MIN_SCALE = 1.5;
+const MAX_SCALE = 6; // 지나치게 큰 캔버스로 브라우저가 멈추는 것을 막는 상한
+
 export interface LoadedPdf {
   numPages: number;
   renderPageToDataUrl: (pageNumber: number) => Promise<string>;
@@ -24,7 +34,12 @@ export async function loadPdf(file: File): Promise<LoadedPdf> {
     numPages: doc.numPages,
     async renderPageToDataUrl(pageNumber) {
       const page = await doc.getPage(pageNumber);
-      const viewport = page.getViewport({ scale: 4 });
+      const base = page.getViewport({ scale: 1 });
+      const scale = Math.min(
+        MAX_SCALE,
+        Math.max(MIN_SCALE, TARGET_LONG_SIDE / Math.max(base.width, base.height))
+      );
+      const viewport = page.getViewport({ scale });
 
       const canvas = document.createElement('canvas');
       canvas.width = viewport.width;

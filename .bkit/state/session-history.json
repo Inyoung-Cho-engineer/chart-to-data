@@ -118,5 +118,45 @@
     "feature": null,
     "phase": null,
     "progress": null
+  },
+  {
+    "sessionId": "0e672247-84da-4e6d-930a-cc03a86b485e",
+    "reason": "other",
+    "endedAt": "2026-08-14T01:25:22.760Z",
+    "feature": null,
+    "phase": null,
+    "progress": null
+  },
+  {
+    "sessionId": "ff1411cc-dd27-4967-93a5-ca9aad2df083",
+    "reason": "other",
+    "endedAt": "2026-08-14T01:25:32.821Z",
+    "feature": null,
+    "phase": null,
+    "progress": null
+  },
+  {
+    "sessionId": "1b40d0e8-900c-4486-a56b-8d730b0a33d3",
+    "reason": "other",
+    "endedAt": "2026-08-14T01:32:43.387Z",
+    "feature": null,
+    "phase": null,
+    "progress": null
+  },
+  {
+    "sessionId": "b1aecd4b-9660-4341-9e49-22d2c5821401",
+    "reason": "other",
+    "endedAt": "2026-08-14T01:40:34.137Z",
+    "feature": null,
+    "phase": null,
+    "progress": null
+  },
+  {
+    "sessionId": "0127ba97-f915-4c12-b709-f41710f932f0",
+    "reason": "other",
+    "endedAt": "2026-08-14T01:42:36.180Z",
+    "feature": null,
+    "phase": null,
+    "progress": null
   }
 ]

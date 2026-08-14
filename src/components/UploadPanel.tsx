@@ -8,6 +8,7 @@ import { ErrorNotice } from '@/components/ErrorNotice';
 import { useSessionStore } from '@/store/session';
 import { makeAppError } from '@/lib/errors';
 import { loadPdf } from '@/lib/pdf';
+import { IDENTITY_CALIBRATION } from '@/lib/types';
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 const MAX_PDF_PAGES = 30;
@@ -29,7 +30,9 @@ export function UploadPanel() {
   const setCurrentPage = useSessionStore((s) => s.setCurrentPage);
   const setCropRect = useSessionStore((s) => s.setCropRect);
   const setCropImage = useSessionStore((s) => s.setCropImage);
+  const setTraceImage = useSessionStore((s) => s.setTraceImage);
   const setPlotBox = useSessionStore((s) => s.setPlotBox);
+  const setCalibration = useSessionStore((s) => s.setCalibration);
   const setXAxis = useSessionStore((s) => s.setXAxis);
   const setYAxis = useSessionStore((s) => s.setYAxis);
   const setSeriesList = useSessionStore((s) => s.setSeriesList);
@@ -50,7 +53,9 @@ export function UploadPanel() {
     setPageImage(null);
     setCropRect(null); // 새 파일을 고르면 이전 파일에서 그린 영역·판독 결과는 의미가 없으므로 지운다
     setCropImage(null);
+    setTraceImage(null);
     setPlotBox(null);
+    setCalibration(IDENTITY_CALIBRATION);
     setXAxis(null);
     setYAxis(null);
     setSeriesList([]);

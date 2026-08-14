@@ -50,3 +50,27 @@ export interface NormalizedRect {
   x1: number;
   y1: number;
 }
+
+// 눈금 위치 보정값 — "축의 최솟값·최댓값 눈금이 plotBox 안 어디에 있는가"
+//
+// 왜 필요한가: 실제 논문 그래프는 **테두리와 눈금 범위가 다르다.**
+// matplotlib 기본값은 데이터 양옆에 5% 여백을 두므로, 예를 들어 눈금이 1~7인 그래프라도
+// 테두리 위쪽은 7.7, 아래쪽은 0.27쯤에 해당한다. 테두리를 그대로 1~7로 보면
+// 아래쪽에서 최대 57%까지 값이 틀어진다(2026-08-14 실측).
+// 그래서 눈금 표시(tick)를 픽셀에서 찾아 "어디가 최솟값이고 어디가 최댓값인지"를 따로 잰다.
+//
+// 값은 plotBox 기준 0~1이며, 축 관례대로 x는 왼쪽이 0, y는 **아래쪽이 0**이다.
+// 눈금을 못 찾으면 {0,1,0,1} — 즉 테두리를 그대로 쓰는 예전 동작이 된다.
+export interface AxisCalibration {
+  xMinT: number;
+  xMaxT: number;
+  yMinT: number;
+  yMaxT: number;
+}
+
+export const IDENTITY_CALIBRATION: AxisCalibration = {
+  xMinT: 0,
+  xMaxT: 1,
+  yMinT: 0,
+  yMaxT: 1,
+};
