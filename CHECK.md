@@ -39,7 +39,7 @@
 
 8. **[보안][Medium] `.env`에 앱과 무관한 고권한 토큰(GITHUB_TOKEN·SUPABASE_ACCESS_TOKEN·VERCEL_TOKEN)이 함께 있음** — OPENAI_API_KEY만 있으면 되는데, 이 파일이 유출되면 피해가 훨씬 커진다. 배포 환경변수엔 이미 OPENAI_API_KEY만 등록돼 있어 그 부분은 안전.
 9. **[보안][Medium-Low] 보안 헤더·CSP가 전혀 없음** — 클릭재킹 등에 무방비. `next.config.ts`에 `X-Frame-Options`·`X-Content-Type-Options` 등 몇 줄 추가.
-10. **[Gap][Important] 단계 표시(StepIndicator, ①~⑤)가 아예 없음** (§3.1)
+10. ~~**[Gap][Important] 단계 표시(StepIndicator, ①~⑤)가 아예 없음**~~ — ✅ **해결됨(2026-08-14)**. `StepFlow.tsx` 신설(단계 표시 + 완료 단계 접기). 사용자 요청으로 디자인 개선을 먼저 진행하며 함께 고침 — 팔레트도 prd_lite.md §5 기준(네이비·스틸블루·앰버)으로 앱 전체에 통일. (§3.1)
 11. **[Gap][Important] `REGION_NO_AXIS` 문구가 정의만 되어 있고 실제로 발생시키는 코드가 없음** — 축 판독 실패 시 사용자가 이 안내를 볼 수 없다. (`errors.ts:49`)
 12. **[Gap][Important] 4MB 초과·JPEG 아닌 조각도 "라인차트를 찾지 못했습니다"로 잘못 안내됨** — §6.2에 대응 코드가 없다. (`apiErrors.ts:36`)
 13. **[Gap][Important] §5.5 A "고정 4색 rival" 규칙과 실제 구현(이미지 팔레트+chroma 판별)이 달라 설계서가 실제 로직을 반영 못 함** — 코드는 맞게 동작하지만 문서를 갱신해야 함. (`trace.ts:57`)
