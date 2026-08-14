@@ -28,7 +28,12 @@ export async function loadPdf(file: File): Promise<LoadedPdf> {
   ).toString();
 
   const buffer = await file.arrayBuffer();
-  const doc = await pdfjsLib.getDocument({ data: buffer }).promise;
+  // wasmUrl — 2026-08-14 실측: 이게 없으면 JBIG2·JPEG2000으로 압축된 스캔 이미지(실제 논문에서
+  // 흔함)가 그래프째로 통째로 빈 흰 화면이 된다. pdfjs-dist v6은 이런 이미지를 디코딩하는 데
+  // wasm 파일이 필요한데, 기본값이 상대경로 "wasm"이라 Next.js에서 못 찾아 콘솔에
+  // "Jbig2Error: JBig2 failed to initialize"를 남기고 그 XObject(이미지)를 조용히 건너뛴다.
+  // public/pdfjs-wasm/에 wasm 파일을 미리 복사해두고 정적 경로로 알려준다.
+  const doc = await pdfjsLib.getDocument({ data: buffer, wasmUrl: '/pdfjs-wasm/' }).promise;
 
   return {
     numPages: doc.numPages,
