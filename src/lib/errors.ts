@@ -24,7 +24,7 @@ interface ErrorEntry {
 export const ERROR_TABLE: Record<ErrorCode, ErrorEntry> = {
   FILE_TYPE: {
     stage: 'file',
-    message: 'PDF 또는 JPG 파일만 올릴 수 있습니다. 다른 형식이면 이미지로 저장한 뒤 다시 올려주세요.',
+    message: 'PDF·JPG·PNG 파일만 올릴 수 있습니다. 다른 형식이면 이미지로 저장한 뒤 다시 올려주세요.',
     action: '다시 시도',
   },
   FILE_SIZE: {

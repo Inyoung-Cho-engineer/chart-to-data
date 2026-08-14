@@ -66,8 +66,9 @@ export function UploadPanel() {
 
     const isPdf = picked.type === 'application/pdf' || /\.pdf$/i.test(picked.name);
     const isJpg = picked.type === 'image/jpeg' || /\.jpe?g$/i.test(picked.name);
+    const isPng = picked.type === 'image/png' || /\.png$/i.test(picked.name);
 
-    if (!isPdf && !isJpg) {
+    if (!isPdf && !isJpg && !isPng) {
       setError(makeAppError('FILE_TYPE'));
       return;
     }
@@ -108,10 +109,10 @@ export function UploadPanel() {
       <ErrorNotice error={error} onAction={() => setError(null)} />
 
       <label className={`cursor-pointer ${primaryButtonClass}`}>
-        PDF 또는 JPG 파일 선택
+        PDF·JPG·PNG 파일 선택
         <input
           type="file"
-          accept=".pdf,.jpg,.jpeg"
+          accept=".pdf,.jpg,.jpeg,.png"
           className="hidden"
           onChange={handleFileChange}
         />
