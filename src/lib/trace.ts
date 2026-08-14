@@ -112,6 +112,19 @@ export function buildPalette(plot: PlotPixels): Rgb[] {
   return palette;
 }
 
+// 이 그래프가 사실상 흑백(무채색)인지 판별한다 — 계열을 색으로 구분하는 이 앱의 방식이
+// 근본적으로 안 통하는 경우다(VERIFICATION.md "알려진 한계"). 실측에서 AI가 실제로는 전부
+// 검정인 계열에 초록·빨강 같은 색을 지어내 답하는 것을 확인했다(2026-08-14) — 그 색 힌트만
+// 믿으면 이 경고를 놓친다. 그래서 AI 힌트가 아니라 **이미지에 실제로 쓰인 색 팔레트**를 본다.
+export function isLikelyGrayscaleChart(plot: PlotPixels): boolean {
+  const palette = buildPalette(plot);
+  const nonBackground = palette.filter(
+    (c) => !(c.r >= BACKGROUND_MIN && c.g >= BACKGROUND_MIN && c.b >= BACKGROUND_MIN)
+  );
+  if (nonBackground.length === 0) return false;
+  return nonBackground.every((c) => isNeutral(c));
+}
+
 // 팔레트에서 힌트에 가장 가까운 색을 고른다.
 // AI가 알려준 색이 뚜렷한 유채색이면 무채색(축 선·격자선 회색)은 아예 후보에서 뺀다 —
 // 선이 흐리게 그려진 그래프에서 회색이 "가장 가까운 색"으로 뽑혀 축을 따라가는 일을 막는다.

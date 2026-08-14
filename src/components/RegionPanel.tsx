@@ -11,6 +11,7 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 
 import { useSessionStore } from '@/store/session';
 import { makeAppError } from '@/lib/errors';
 import { detectPlotBox } from '@/lib/plotBox';
+import { isLikelyGrayscaleChart, loadPlotPixels } from '@/lib/trace';
 import { IDENTITY_CALIBRATION, type NormalizedRect } from '@/lib/types';
 import { cardClass, mutedTextClass, primaryButtonClass } from '@/lib/ui';
 
@@ -43,8 +44,10 @@ export function RegionPanel() {
   const cropImage = useSessionStore((s) => s.cropImage);
   const traceImage = useSessionStore((s) => s.traceImage);
   const plotBox = useSessionStore((s) => s.plotBox);
+  const grayscaleWarning = useSessionStore((s) => s.grayscaleWarning);
   const setPlotBox = useSessionStore((s) => s.setPlotBox);
   const setCalibration = useSessionStore((s) => s.setCalibration);
+  const setGrayscaleWarning = useSessionStore((s) => s.setGrayscaleWarning);
   const setXAxis = useSessionStore((s) => s.setXAxis);
   const setYAxis = useSessionStore((s) => s.setYAxis);
   const setSeriesList = useSessionStore((s) => s.setSeriesList);
@@ -108,6 +111,7 @@ export function RegionPanel() {
     if (!cropImage) return;
     setElapsedSec(0);
     setAnalyzing(true);
+    setGrayscaleWarning(false);
     setError(null);
     try {
       const res = await fetch('/api/analyze', {
@@ -134,6 +138,16 @@ export function RegionPanel() {
         calibration = detection.calibration;
       } catch {
         // 보정에 실패해도 AI 값으로 계속 진행한다 — 사용자가 축 확인 단계에서 결과를 볼 수 있다.
+      }
+
+      // 이 그래프가 흑백인지 미리 확인해 경고한다 — 계열을 색으로 구분하는 이 앱의 방식이
+      // 근본적으로 안 통하는 경우다. AI가 답한 계열 색은 못 믿는다(검정 계열에 초록·빨강을
+      // 지어내는 것을 실측으로 확인함, 2026-08-14) — 그래서 실제 이미지 팔레트로 직접 판별한다.
+      try {
+        const plot = await loadPlotPixels(traceImage ?? cropImage, box);
+        setGrayscaleWarning(isLikelyGrayscaleChart(plot));
+      } catch {
+        // 판별에 실패해도 흐름은 막지 않는다 — 경고를 못 띄울 뿐이다.
       }
 
       // 축은 아직 사용자가 확인하지 않은 상태로 채워둔다 — AxisPanel에서 확인 버튼을 눌러야 확정된다.
@@ -196,6 +210,17 @@ export function RegionPanel() {
         </div>
       ) : (
         <p className="text-slate-400">만드는 중...</p>
+      )}
+
+      {grayscaleWarning && (
+        <div
+          role="status"
+          className="w-full rounded-lg border border-amber bg-amber/10 px-3 py-2 text-left text-xs text-amber-hover"
+        >
+          이 그래프는 흑백(무채색)으로 보입니다. 이 앱은 계열을 <b>색</b>으로 구분해 추적하므로,
+          흑백 그래프에서는 추출값이 부정확하거나 엉뚱한 계열의 값일 수 있습니다. 결과를 CSV로
+          받기 전에 반드시 원본 그래프와 눈으로 대조해 확인해주세요.
+        </div>
       )}
 
       <button

@@ -48,6 +48,7 @@ export function ImageViewer() {
   const setTraceImage = useSessionStore((s) => s.setTraceImage);
   const setPlotBox = useSessionStore((s) => s.setPlotBox);
   const setCalibration = useSessionStore((s) => s.setCalibration);
+  const setGrayscaleWarning = useSessionStore((s) => s.setGrayscaleWarning);
   const setXAxis = useSessionStore((s) => s.setXAxis);
   const setYAxis = useSessionStore((s) => s.setYAxis);
   const setSeriesList = useSessionStore((s) => s.setSeriesList);
@@ -60,6 +61,7 @@ export function ImageViewer() {
   function clearAnalysisResult() {
     setPlotBox(null);
     setCalibration(IDENTITY_CALIBRATION);
+    setGrayscaleWarning(false);
     setXAxis(null);
     setYAxis(null);
     setSeriesList([]);

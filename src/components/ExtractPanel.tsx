@@ -35,6 +35,7 @@ export function ExtractPanel() {
   const traceImage = useSessionStore((s) => s.traceImage);
   const plotBox = useSessionStore((s) => s.plotBox);
   const calibration = useSessionStore((s) => s.calibration);
+  const grayscaleWarning = useSessionStore((s) => s.grayscaleWarning);
   const xAxis = useSessionStore((s) => s.xAxis);
   const yAxis = useSessionStore((s) => s.yAxis);
   const seriesList = useSessionStore((s) => s.seriesList);
@@ -168,6 +169,17 @@ export function ExtractPanel() {
 
   return (
     <section className={`${cardClass} flex flex-col items-center gap-3 text-sm`}>
+      {grayscaleWarning && (
+        <div
+          role="status"
+          className="w-full rounded-lg border border-amber bg-amber/10 px-3 py-2 text-left text-xs text-amber-hover"
+        >
+          이 그래프는 흑백(무채색)으로 보입니다. 이 앱은 계열을 <b>색</b>으로 구분해 추적하므로,
+          추출값이 부정확하거나 엉뚱한 계열의 값일 수 있습니다. CSV로 받기 전에 반드시 원본
+          그래프와 눈으로 대조해 확인해주세요.
+        </div>
+      )}
+
       <button
         type="button"
         className={primaryButtonClass}

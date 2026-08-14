@@ -26,6 +26,8 @@ interface SessionState {
   yAxis: AxisInfo | null;
   plotBox: NormalizedRect | null; // cropImage 기준 그래프 안쪽 영역(테두리)
   calibration: AxisCalibration; // plotBox 안에서 축 최솟값·최댓값 눈금이 있는 위치
+  grayscaleWarning: boolean; // 분석 직후 판별 — 흑백 그래프는 색 기반 추적이 근본적으로 안 통한다
+  // (분석~추출까지 여러 단계를 거치는 동안 화면 패널이 접혀도 경고가 계속 보이도록 세션에 둔다)
   seriesList: Series[];
   selectedSeriesId: string | null;
   crossings: Array<{ tx: number; seriesIds: string[] }>;
@@ -44,6 +46,7 @@ interface SessionActions {
   setYAxis: (axis: AxisInfo | null) => void;
   setPlotBox: (box: NormalizedRect | null) => void;
   setCalibration: (calibration: AxisCalibration) => void;
+  setGrayscaleWarning: (warning: boolean) => void;
   setSeriesList: (list: Series[]) => void;
   setSelectedSeriesId: (id: string | null) => void;
   setCrossings: (crossings: SessionState['crossings']) => void;
@@ -63,6 +66,7 @@ const initialState: SessionState = {
   yAxis: null,
   plotBox: null,
   calibration: IDENTITY_CALIBRATION,
+  grayscaleWarning: false,
   seriesList: [],
   selectedSeriesId: null,
   crossings: [],
@@ -82,6 +86,7 @@ export const useSessionStore = create<SessionState & SessionActions>()((set) => 
   setYAxis: (yAxis) => set({ yAxis }),
   setPlotBox: (plotBox) => set({ plotBox }),
   setCalibration: (calibration) => set({ calibration }),
+  setGrayscaleWarning: (grayscaleWarning) => set({ grayscaleWarning }),
   setSeriesList: (seriesList) => set({ seriesList }),
   setSelectedSeriesId: (selectedSeriesId) => set({ selectedSeriesId }),
   setCrossings: (crossings) => set({ crossings }),
