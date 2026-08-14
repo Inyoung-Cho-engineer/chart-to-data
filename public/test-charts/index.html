@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>chart-to-data 검증용 그래프</title>
+  <style>
+    body { font-family: sans-serif; margin: 24px; color: #222; }
+    h1 { font-size: 20px; }
+    p { color: #555; font-size: 14px; }
+    .chart { border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-bottom: 20px; }
+    .meta { font-size: 13px; color: #555; margin-bottom: 8px; }
+    .risk { color: #b45309; }
+    canvas { max-width: 100%; border: 1px solid #eee; }
+    a.dl { display: inline-block; margin-top: 8px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>chart-to-data 검증용 그래프 (PLAN 28번)</h1>
+  <p>
+    정답값을 수식으로 알고 있는 그래프들입니다. 각각 다른 위험 요소를 하나씩 담았습니다.<br />
+    아래 <b>JPG 내려받기</b>로 파일을 받아 앱에 올려 시험할 수 있습니다. 정답 수식은
+    <code>charts.js</code>와 <code>README.md</code>에 있습니다.
+  </p>
+  <div id="list"></div>
+
+  <script src="./charts.js"></script>
+  <script>
+    const list = document.getElementById('list');
+    window.CHART_SPECS.forEach((spec) => {
+      const box = document.createElement('div');
+      box.className = 'chart';
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const axisText = spec.yLog
+        ? `X ${spec.xMin}~${spec.xMax} (선형), Y ${spec.yMin}~${spec.yMax} (로그)`
+        : `X ${spec.xMin}~${spec.xMax} (선형), Y ${spec.yMin}~${spec.yMax} (선형)`;
+      meta.innerHTML =
+        `<b>${spec.title}</b><br />` +
+        `<span class="risk">확인하려는 것: ${spec.risk}</span><br />` +
+        `축: ${axisText} · 계열 ${spec.series.length}개`;
+      box.appendChild(meta);
+
+      const canvas = document.createElement('canvas');
+      window.renderChart(spec, canvas);
+      box.appendChild(canvas);
+
+      const a = document.createElement('a');
+      a.className = 'dl';
+      a.textContent = `JPG 내려받기 (${spec.id}.jpg)`;
+      a.href = canvas.toDataURL('image/jpeg', 0.95);
+      a.download = spec.id + '.jpg';
+      box.appendChild(document.createElement('br'));
+      box.appendChild(a);
+
+      list.appendChild(box);
+    });
+  </script>
+</body>
+</html>

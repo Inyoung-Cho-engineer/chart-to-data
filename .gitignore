@@ -1,0 +1,20 @@
+.env
+node_modules/
+trash-can/
+
+# Next.js 빌드 산출물
+.next/
+out/
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# 진단·검증용 임시 파일 (저장소에 올리지 않는다)
+tmp-diagnose/
+public/tmp-verify/
+
+.DS_Store
+
+# 로컬 도구 상태(공유 불필요)
+.bkit/runtime/
+.bkit/audit/
+.claude/settings.local.json
