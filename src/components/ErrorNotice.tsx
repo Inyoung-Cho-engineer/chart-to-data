@@ -19,14 +19,14 @@ export function ErrorNotice({ error, onAction }: ErrorNoticeProps) {
   return (
     <div
       role="alert"
-      className="flex w-full items-center justify-between gap-4 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
+      className="flex w-full items-center justify-between gap-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"
     >
       <span>{message}</span>
       {onAction && (
         <button
           type="button"
           onClick={onAction}
-          className="shrink-0 rounded border border-red-400 px-2 py-1"
+          className="shrink-0 rounded-lg border border-red-400 px-2 py-1 font-medium transition-colors hover:bg-red-100"
         >
           {action}
         </button>

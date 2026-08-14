@@ -20,6 +20,7 @@ import {
 } from '@/lib/trace';
 import { makeAppError } from '@/lib/errors';
 import { buildCsv, downloadCsv } from '@/lib/csv';
+import { cardClass, mutedTextClass, primaryButtonClass, secondaryButtonClass } from '@/lib/ui';
 
 const SAMPLE_COUNT = 50;
 
@@ -166,10 +167,10 @@ export function ExtractPanel() {
   const needsCheckCount = points.filter((p) => p.needsCheck).length;
 
   return (
-    <section className="flex w-full max-w-md flex-col items-center gap-3 rounded border p-4 text-sm">
+    <section className={`${cardClass} flex flex-col items-center gap-3 text-sm`}>
       <button
         type="button"
-        className="rounded bg-black px-4 py-2 text-white disabled:opacity-40"
+        className={primaryButtonClass}
         onClick={handleExtract}
         disabled={!cropImage || extracting}
       >
@@ -177,24 +178,24 @@ export function ExtractPanel() {
       </button>
 
       {points.length > 0 && !extracting && (
-        <p className="text-zinc-600">
+        <p className="font-medium text-navy">
           추출 완료 {points.length}개 — 확인 필요 {needsCheckCount}개
         </p>
       )}
 
-      <div className="flex w-full flex-col gap-1 border-t pt-3">
-        <p className="text-zinc-500">특정 X값 추가로 확인하기</p>
+      <div className="flex w-full flex-col gap-1 border-t border-slate-200 pt-3">
+        <p className={mutedTextClass}>특정 X값 추가로 확인하기</p>
         <div className="flex gap-2">
           <input
             type="number"
-            className="w-full rounded border px-2 py-1"
+            className="w-full rounded-md border border-slate-300 px-2 py-1 focus:border-steel focus:outline-none"
             placeholder={xAxis ? `${xAxis.min}~${xAxis.max}` : ''}
             value={queryX}
             onChange={(e) => setQueryX(e.target.value)}
           />
           <button
             type="button"
-            className="shrink-0 rounded border px-3 py-1 disabled:opacity-40"
+            className={`shrink-0 ${secondaryButtonClass} px-3 py-1`}
             onClick={handleQueryPoint}
             disabled={!queryX || queryLoading}
           >
@@ -206,7 +207,7 @@ export function ExtractPanel() {
 
       <button
         type="button"
-        className="w-full rounded border px-4 py-2 disabled:opacity-40"
+        className={`w-full ${secondaryButtonClass}`}
         onClick={handleDownloadCsv}
         disabled={points.length === 0}
       >

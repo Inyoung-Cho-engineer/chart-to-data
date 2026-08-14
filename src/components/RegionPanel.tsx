@@ -8,6 +8,7 @@ import { useSessionStore } from '@/store/session';
 import { makeAppError } from '@/lib/errors';
 import { detectPlotBox } from '@/lib/plotBox';
 import { IDENTITY_CALIBRATION } from '@/lib/types';
+import { cardClass, mutedTextClass, primaryButtonClass } from '@/lib/ui';
 
 // 이 단계는 앱에서 가장 오래(최대 55초, MODEL_TIMEOUT_MS) 걸리는 유일한 대기 구간이다.
 // 버튼 글자만 바뀌는 것으로는 "멈췄다"는 인상을 주기 쉬워, 스피너와 경과 시간을 함께 보여준다.
@@ -82,22 +83,22 @@ export function RegionPanel() {
   }
 
   return (
-    <section className="flex w-full max-w-md flex-col items-center gap-2 rounded border p-4 text-center text-sm">
-      <p className="text-zinc-500">잘라낸 영역 미리보기</p>
+    <section className={`${cardClass} flex flex-col items-center gap-2 text-center text-sm`}>
+      <p className={mutedTextClass}>잘라낸 영역 미리보기</p>
       {cropImage ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={cropImage}
           alt="잘라낸 영역 미리보기"
-          className="max-h-60 w-auto rounded border"
+          className="max-h-60 w-auto rounded-lg border border-slate-200"
         />
       ) : (
-        <p className="text-zinc-400">만드는 중...</p>
+        <p className="text-slate-400">만드는 중...</p>
       )}
 
       <button
         type="button"
-        className="rounded bg-black px-4 py-2 text-white disabled:opacity-40"
+        className={primaryButtonClass}
         onClick={handleAnalyze}
         disabled={!cropImage || analyzing}
       >
@@ -105,10 +106,10 @@ export function RegionPanel() {
       </button>
 
       {analyzing && (
-        <div className="flex items-center gap-2 text-zinc-500" role="status">
+        <div className={`flex items-center gap-2 ${mutedTextClass}`} role="status">
           <span
             aria-hidden
-            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600"
+            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-steel/30 border-t-steel"
           />
           <span>
             {elapsedSec}초 경과 — 보통 5~30초 걸립니다{elapsedSec >= 30 ? ', 조금만 더 기다려주세요' : ''}

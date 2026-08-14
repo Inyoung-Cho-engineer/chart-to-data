@@ -9,6 +9,7 @@ import { useSessionStore } from '@/store/session';
 import { makeAppError } from '@/lib/errors';
 import { loadPdf } from '@/lib/pdf';
 import { IDENTITY_CALIBRATION } from '@/lib/types';
+import { cardClass, mutedTextClass, primaryButtonClass } from '@/lib/ui';
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 const MAX_PDF_PAGES = 30;
@@ -103,10 +104,10 @@ export function UploadPanel() {
   }
 
   return (
-    <section className="flex w-full max-w-md flex-col items-center gap-3 rounded border p-6 text-center text-sm">
+    <section className={`${cardClass} flex flex-col items-center gap-3 text-center text-sm`}>
       <ErrorNotice error={error} onAction={() => setError(null)} />
 
-      <label className="cursor-pointer rounded bg-black px-4 py-2 text-white">
+      <label className={`cursor-pointer ${primaryButtonClass}`}>
         PDF 또는 JPG 파일 선택
         <input
           type="file"
@@ -116,18 +117,18 @@ export function UploadPanel() {
         />
       </label>
 
-      {checking && <p className="text-zinc-500">확인 중...</p>}
+      {checking && <p className={mutedTextClass}>확인 중...</p>}
       {!checking && file && !error && (
-        <p className="text-zinc-600">
+        <p className="font-medium text-navy">
           선택한 파일: {file.name} — 검사 통과 (왼쪽에서 확인하세요)
         </p>
       )}
 
-      <p className="text-zinc-500">업로드 파일은 20MB 이하, PDF는 30페이지 이하만 가능합니다.</p>
-      <p className="text-zinc-500">
+      <p className={mutedTextClass}>업로드 파일은 20MB 이하, PDF는 30페이지 이하만 가능합니다.</p>
+      <p className={mutedTextClass}>
         업로드한 파일과 추출 결과는 서버에 저장되지 않습니다. 새로고침하면 사라집니다.
       </p>
-      <p className="text-zinc-500">
+      <p className={mutedTextClass}>
         지정한 그래프 영역은 판독을 위해 외부 AI 모델로 전송됩니다. 공개된 논문·기술 보고서 등
         공개 자료만 올려주세요.
       </p>

@@ -5,6 +5,7 @@
 
 import { useSessionStore } from '@/store/session';
 import type { DataPoint } from '@/lib/types';
+import { cardClass, mutedTextClass } from '@/lib/ui';
 
 const REASON_LABEL: Record<NonNullable<DataPoint['checkReason']>, string> = {
   low_confidence: '신뢰도 낮음',
@@ -28,36 +29,52 @@ export function ResultTable() {
   const needsCheckCount = points.filter((p) => p.needsCheck).length;
 
   return (
-    <section className="flex w-full max-w-5xl flex-col gap-2 rounded border p-4 text-sm">
-      <p className="text-zinc-500">
-        추출 결과 {points.length}개 — 확인 필요 {needsCheckCount}개
+    <section className={`${cardClass} flex w-full max-w-5xl flex-col gap-2`}>
+      <p className={mutedTextClass}>
+        추출 결과 {points.length}개 — 확인 필요{' '}
+        <span className="font-medium text-amber">{needsCheckCount}개</span>
       </p>
-      <div className="max-h-96 overflow-y-auto overflow-x-auto">
+      <div className="max-h-96 overflow-y-auto overflow-x-auto rounded-lg border border-slate-200">
         <table className="w-full min-w-[480px] border-collapse text-left text-xs">
           <thead>
-            <tr className="bg-zinc-50">
-              <th className="border-b px-2 py-1">#</th>
-              <th className="border-b px-2 py-1">X{xAxis?.unit ? ` (${xAxis.unit})` : ''}</th>
-              <th className="border-b px-2 py-1">추출값{yAxis?.unit ? ` (${yAxis.unit})` : ''}</th>
-              <th className="border-b px-2 py-1">신뢰도</th>
-              <th className="border-b px-2 py-1">상태</th>
+            <tr className="bg-navy text-white">
+              <th className="px-2 py-2 font-medium">#</th>
+              <th className="px-2 py-2 font-medium">X{xAxis?.unit ? ` (${xAxis.unit})` : ''}</th>
+              <th className="px-2 py-2 font-medium">추출값{yAxis?.unit ? ` (${yAxis.unit})` : ''}</th>
+              <th className="px-2 py-2 font-medium">신뢰도</th>
+              <th className="px-2 py-2 font-medium">상태</th>
             </tr>
           </thead>
           <tbody>
             {points.map((p, i) => (
-              <tr key={i} className={p.source === 'user_query' ? 'bg-amber-50' : ''}>
-                <td className="border-b px-2 py-1">{p.source === 'user_query' ? '★' : i + 1}</td>
-                <td className="border-b px-2 py-1">{formatValue(p.x)}</td>
-                <td className="border-b px-2 py-1">{formatValue(p.y)}</td>
-                <td className="border-b px-2 py-1">
-                  <span className={p.confidence === 'low' ? 'rounded bg-zinc-200 px-1.5 py-0.5' : ''}>
+              <tr
+                key={i}
+                className={
+                  p.source === 'user_query'
+                    ? 'bg-amber/10'
+                    : i % 2 === 0
+                      ? 'bg-white'
+                      : 'bg-card/50'
+                }
+              >
+                <td className="border-b border-slate-200 px-2 py-1">
+                  {p.source === 'user_query' ? '★' : i + 1}
+                </td>
+                <td className="border-b border-slate-200 px-2 py-1">{formatValue(p.x)}</td>
+                <td className="border-b border-slate-200 px-2 py-1">{formatValue(p.y)}</td>
+                <td className="border-b border-slate-200 px-2 py-1">
+                  <span
+                    className={
+                      p.confidence === 'low' ? 'rounded bg-amber/20 px-1.5 py-0.5 text-amber-hover' : ''
+                    }
+                  >
                     {p.confidence}
                   </span>
                 </td>
-                <td className="border-b px-2 py-1">
+                <td className="border-b border-slate-200 px-2 py-1">
                   {p.needsCheck ? (
                     <span
-                      className="text-amber-600"
+                      className="font-medium text-amber-hover"
                       title={p.checkReason ? REASON_LABEL[p.checkReason] : undefined}
                     >
                       확인 필요{p.checkReason ? ` (${REASON_LABEL[p.checkReason]})` : ''}

@@ -10,6 +10,7 @@ import { loadPdf } from '@/lib/pdf';
 import { cropImageForTrace, cropImageToDataUrl } from '@/lib/crop';
 import { makeAppError } from '@/lib/errors';
 import { IDENTITY_CALIBRATION } from '@/lib/types';
+import { mutedTextClass, secondaryButtonClass } from '@/lib/ui';
 
 const MIN_SELECTION_PX = 100; // DESIGN.md §3.4 ② — 가로·세로 100px 미만이면 너무 작다고 안내
 
@@ -142,7 +143,7 @@ export function ImageViewer() {
 
   if (!file || !pageImage) {
     return (
-      <div className="flex w-full max-w-lg items-center justify-center rounded border border-dashed p-16 text-sm text-zinc-400">
+      <div className="flex w-full max-w-lg items-center justify-center rounded-xl border border-dashed border-slate-300 bg-card/40 p-16 text-sm text-slate-400">
         업로드한 그래프 이미지가 여기에 표시됩니다.
       </div>
     );
@@ -200,11 +201,11 @@ export function ImageViewer() {
           src={pageImage}
           alt={file.name}
           draggable={false}
-          className="max-h-[500px] w-auto rounded border object-contain"
+          className="max-h-[500px] w-auto rounded-lg border border-slate-200 object-contain"
         />
         {cropRect && (
           <div
-            className="pointer-events-none absolute border-2 border-blue-500 bg-blue-500/20"
+            className="pointer-events-none absolute border-2 border-steel bg-steel/20"
             style={{
               left: `${cropRect.x0 * 100}%`,
               top: `${cropRect.y0 * 100}%`,
@@ -215,7 +216,7 @@ export function ImageViewer() {
         )}
       </div>
 
-      <p className="text-sm text-zinc-500">
+      <p className={`text-sm ${mutedTextClass}`}>
         {cropRect
           ? `선택 영역: ${selectionPx?.w ?? '?'} × ${selectionPx?.h ?? '?'}px`
           : '이미지 위에서 그래프 영역을 드래그로 지정해주세요.'}
@@ -225,18 +226,18 @@ export function ImageViewer() {
         <div className="flex items-center gap-3 text-sm">
           <button
             type="button"
-            className="rounded border px-2 py-1 disabled:opacity-40"
+            className={`${secondaryButtonClass} px-2 py-1`}
             onClick={() => goToPage(currentPage - 1)}
             disabled={moving || currentPage <= 1}
           >
             ◀
           </button>
-          <span>
+          <span className="text-navy">
             {moving ? '불러오는 중...' : `${currentPage} / ${file.pageCount} 페이지`}
           </span>
           <button
             type="button"
-            className="rounded border px-2 py-1 disabled:opacity-40"
+            className={`${secondaryButtonClass} px-2 py-1`}
             onClick={() => goToPage(currentPage + 1)}
             disabled={moving || currentPage >= file.pageCount}
           >

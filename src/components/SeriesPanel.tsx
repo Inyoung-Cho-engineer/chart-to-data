@@ -4,6 +4,7 @@
 // 축을 확인하기 전에는 넘어오지 않는다.
 
 import { useSessionStore } from '@/store/session';
+import { cardClass, mutedTextClass } from '@/lib/ui';
 
 export function SeriesPanel() {
   const xAxis = useSessionStore((s) => s.xAxis);
@@ -26,29 +27,41 @@ export function SeriesPanel() {
   }
 
   return (
-    <section className="flex w-full max-w-md flex-col items-center gap-2 rounded border p-4 text-sm">
-      <p className="text-zinc-500">계열 선택</p>
-      <div className="flex w-full flex-col gap-2">
-        {seriesList.map((series) => (
-          <label
-            key={series.id}
-            className="flex items-center gap-2 rounded border px-3 py-2"
-          >
-            <input
-              type="radio"
-              name="series"
-              checked={selectedSeriesId === series.id}
-              onChange={() => handleSelect(series.id)}
-            />
-            <span
-              className="inline-block h-3 w-3 shrink-0 rounded-full border"
-              style={{ backgroundColor: series.colorHex }}
-            />
-            <span>{series.label}</span>
-          </label>
-        ))}
+    <section className={`${cardClass} flex flex-col items-center gap-2 text-sm`}>
+      <p className={mutedTextClass}>계열 선택</p>
+      <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3">
+        {seriesList.map((series) => {
+          const selected = selectedSeriesId === series.id;
+          return (
+            <label
+              key={series.id}
+              className={
+                'flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 p-3 text-center transition-colors ' +
+                (selected
+                  ? 'border-navy bg-card'
+                  : 'border-slate-200 bg-white hover:border-steel')
+              }
+            >
+              <input
+                type="radio"
+                name="series"
+                checked={selected}
+                onChange={() => handleSelect(series.id)}
+                className="sr-only"
+              />
+              <span
+                className="h-8 w-8 shrink-0 rounded-full border border-slate-300 shadow-sm"
+                style={{ backgroundColor: series.colorHex }}
+                aria-hidden
+              />
+              <span className={selected ? 'font-medium text-navy' : 'text-slate-700'}>
+                {series.label}
+              </span>
+            </label>
+          );
+        })}
       </div>
-      <p className="text-xs text-zinc-400">
+      <p className="text-xs text-slate-400">
         한 번에 한 개씩 추출합니다. 다른 선은 나중에 다시 고르면 됩니다.
       </p>
     </section>

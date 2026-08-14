@@ -1,20 +1,26 @@
 @import "tailwindcss";
 
+/* chart-to-data 브랜드 팔레트 (prd_lite.md §5, 소개 PPT와 동일하게 통일) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f9fc; /* 흰색 대신 아주 옅은 블루틴트 배경 */
+  --foreground: #16233a; /* 차분한 진한 남색 글자 */
+  --color-navy: #13294b; /* 주색 — 신뢰감, primary 버튼/강조 */
+  --color-navy-hover: #0d1d38;
+  --color-steel: #5c82ac; /* 보조색 — 보조 버튼·테두리·아이콘 */
+  --color-amber: #e8a33d; /* 강조색 — 확인 필요/포인트 액션 */
+  --color-amber-hover: #cf8a24;
+  --color-card: #eaf1f8; /* 카드 배경(옅은 블루틴트) */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-navy: var(--color-navy);
+  --color-navy-hover: var(--color-navy-hover);
+  --color-steel: var(--color-steel);
+  --color-amber: var(--color-amber);
+  --color-amber-hover: var(--color-amber-hover);
+  --color-card: var(--color-card);
 }
 
 body {
