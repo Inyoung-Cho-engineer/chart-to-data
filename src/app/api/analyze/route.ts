@@ -3,7 +3,7 @@ import { analyzeChartImage } from '@/lib/vision';
 import { analyzeResponseSchema } from '@/lib/schema';
 import {
   errorResponse,
-  withTimeout,
+  withAbortTimeout,
   readImageField,
   classifyModelError,
   MODEL_TIMEOUT_MS,
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
   let raw: unknown;
   try {
-    raw = await withTimeout(analyzeChartImage(image), MODEL_TIMEOUT_MS);
+    raw = await withAbortTimeout((signal) => analyzeChartImage(image, signal), MODEL_TIMEOUT_MS);
   } catch (err) {
     // 원본 에러(모델 응답 내용 포함)는 서버 로그에만 남기고, 브라우저에는 코드만 보낸다.
     console.error('[api/analyze] 모델 호출 실패:', err);

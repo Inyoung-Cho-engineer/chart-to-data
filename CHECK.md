@@ -25,7 +25,7 @@
 ### 🔴 배포 전 반드시 — 비용·안정성 직결
 
 1. ~~**[보안][Critical] `/api/analyze`에 rate limiting이 없음**~~ — ✅ **해결됨(2026-08-14)**. IP당 분당 5회로 제한하는 `src/proxy.ts` 추가(6번째 요청부터 `MODEL_RATE_LIMITED`·429). 실제 7회 연속 호출로 5회 통과·2회 차단을 확인. 다만 인스턴스 메모리 기반이라 완벽한 방어는 아님 — **OpenAI 대시보드 usage hard limit은 여전히 별도로 걸어둘 것.**
-2. **[보안][High] 타임아웃이 OpenAI 호출을 실제로 취소하지 않음** — 55초 뒤 사용자에겐 실패로 보여도 모델 호출은 끝까지 돌아 요금이 청구된다. `vision.ts`에 `AbortController` 추가 + `maxRetries: 0`.
+2. ~~**[보안][High] 타임아웃이 OpenAI 호출을 실제로 취소하지 않음**~~ — ✅ **해결됨(2026-08-14)**. `apiErrors.ts`의 `withTimeout`을 `withAbortTimeout`으로 교체해 타임아웃 시 `AbortController.abort()`로 실제 OpenAI 요청을 중단시킴. `vision.ts`는 `signal`을 받아 `chat.completions.create`에 그대로 넘기고, 클라이언트에 `maxRetries: 0`을 줘서 타임아웃 시 재시도로 요금이 배로 나가는 것도 막음. Node 단위 테스트로 취소 신호가 300ms 설정에서 정확히 314ms에 전달됨을 확인, 실제 서버로 성공/실패 케이스 모두 재확인.
 
 ### 🟠 이번 사이클 안에 — 정확도·안정성에 실제 영향
 

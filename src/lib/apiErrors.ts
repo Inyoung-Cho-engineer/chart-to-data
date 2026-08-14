@@ -14,20 +14,28 @@ export function errorResponse(code: ErrorCode, stage: 'region' | 'model', status
   return NextResponse.json({ error: { code, stage } }, { status });
 }
 
-export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('MODEL_TIMEOUT')), ms);
-    promise.then(
-      (value) => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      (err) => {
-        clearTimeout(timer);
-        reject(err);
-      }
-    );
-  });
+// CHECK.md 2번 — 예전엔 타임아웃이 되면 브라우저에는 실패로 보였지만 OpenAI 호출 자체는
+// 끝까지 돌아 요금이 그대로 청구됐다(취소 신호를 보내지 않았기 때문). AbortController로
+// 실제 요청을 중단시킨다. fn은 signal을 받아 OpenAI SDK에 그대로 넘겨야 한다.
+export function withAbortTimeout<T>(
+  fn: (signal: AbortSignal) => Promise<T>,
+  ms: number
+): Promise<T> {
+  const controller = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, ms);
+
+  return fn(controller.signal)
+    .catch((err) => {
+      // 우리가 타임아웃으로 끊은 것이면, SDK가 던지는 에러 종류와 상관없이 항상 같은
+      // 코드로 분류되도록 통일한다.
+      if (timedOut) throw new Error('MODEL_TIMEOUT');
+      throw err;
+    })
+    .finally(() => clearTimeout(timer));
 }
 
 export const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // DESIGN.md §8.3·§10 — 약 4MB

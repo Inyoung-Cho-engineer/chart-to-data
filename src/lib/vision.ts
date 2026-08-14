@@ -22,7 +22,9 @@ let client: OpenAI | null = null;
 
 function getClient(): OpenAI {
   if (!client) {
-    client = new OpenAI({ apiKey: getOpenAIApiKey() });
+    // maxRetries: 0 — SDK 기본값(2회)이 켜져 있으면 타임아웃으로 끊어도 재시도가 이어져
+    // 실패 하나당 최대 3배 요금이 나갈 수 있다. 재시도는 상위(withAbortTimeout)에서 다루지 않는다.
+    client = new OpenAI({ apiKey: getOpenAIApiKey(), maxRetries: 0 });
   }
   return client;
 }
@@ -47,22 +49,25 @@ chartFound가 true일 때만 아래 필드도 함께 답하세요.
 
 확실하지 않은 값을 임의로 지어내지 말고, 이미지에서 실제로 읽을 수 있는 값만 답하세요.`;
 
-export async function analyzeChartImage(imageDataUrl: string): Promise<unknown> {
+export async function analyzeChartImage(imageDataUrl: string, signal?: AbortSignal): Promise<unknown> {
   const openai = getClient();
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    response_format: { type: 'json_object' },
-    messages: [
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: ANALYZE_PROMPT },
-          { type: 'image_url', image_url: { url: imageDataUrl } },
-        ],
-      },
-    ],
-  });
+  const response = await openai.chat.completions.create(
+    {
+      model: 'gpt-4o-mini',
+      response_format: { type: 'json_object' },
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: ANALYZE_PROMPT },
+            { type: 'image_url', image_url: { url: imageDataUrl } },
+          ],
+        },
+      ],
+    },
+    { signal }
+  );
 
   const content = response.choices[0]?.message?.content;
   if (!content) {
