@@ -7,7 +7,8 @@ export type ErrorCode =
   | 'REGION_NO_CHART'
   | 'MODEL_CALL_FAILED'
   | 'MODEL_TIMEOUT'
-  | 'MODEL_BAD_FORMAT';
+  | 'MODEL_BAD_FORMAT'
+  | 'MODEL_RATE_LIMITED';
 
 export function errorResponse(code: ErrorCode, stage: 'region' | 'model', status: number) {
   return NextResponse.json({ error: { code, stage } }, { status });

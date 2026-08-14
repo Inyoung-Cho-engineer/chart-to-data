@@ -3,14 +3,23 @@
 // DESIGN.md §3.2 ②·§9 — 드래그로 지정한 영역을 잘라낸 미리보기 + 서버로 분석 요청.
 // 판독에 성공하면 plotBox·축·계열·교차 정보를 세션 저장소에 담아 AxisPanel이 이어받는다.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSessionStore } from '@/store/session';
 import { makeAppError } from '@/lib/errors';
 import { detectPlotBox } from '@/lib/plotBox';
 import { IDENTITY_CALIBRATION } from '@/lib/types';
 
+// 이 단계는 앱에서 가장 오래(최대 55초, MODEL_TIMEOUT_MS) 걸리는 유일한 대기 구간이다.
+// 버튼 글자만 바뀌는 것으로는 "멈췄다"는 인상을 주기 쉬워, 스피너와 경과 시간을 함께 보여준다.
 export function RegionPanel() {
   const [analyzing, setAnalyzing] = useState(false);
+  const [elapsedSec, setElapsedSec] = useState(0);
+
+  useEffect(() => {
+    if (!analyzing) return;
+    const timer = setInterval(() => setElapsedSec((s) => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, [analyzing]);
   const cropRect = useSessionStore((s) => s.cropRect);
   const cropImage = useSessionStore((s) => s.cropImage);
   const traceImage = useSessionStore((s) => s.traceImage);
@@ -28,6 +37,7 @@ export function RegionPanel() {
 
   async function handleAnalyze() {
     if (!cropImage) return;
+    setElapsedSec(0);
     setAnalyzing(true);
     setError(null);
     try {
@@ -93,6 +103,18 @@ export function RegionPanel() {
       >
         {analyzing ? '판독 중...' : '이 영역으로 분석'}
       </button>
+
+      {analyzing && (
+        <div className="flex items-center gap-2 text-zinc-500" role="status">
+          <span
+            aria-hidden
+            className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600"
+          />
+          <span>
+            {elapsedSec}초 경과 — 보통 5~30초 걸립니다{elapsedSec >= 30 ? ', 조금만 더 기다려주세요' : ''}
+          </span>
+        </div>
+      )}
     </section>
   );
 }

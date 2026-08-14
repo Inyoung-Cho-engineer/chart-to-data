@@ -12,7 +12,8 @@ export type ErrorCode =
   | 'REGION_NO_AXIS'
   | 'MODEL_CALL_FAILED'
   | 'MODEL_TIMEOUT'
-  | 'MODEL_BAD_FORMAT';
+  | 'MODEL_BAD_FORMAT'
+  | 'MODEL_RATE_LIMITED';
 
 interface ErrorEntry {
   stage: AppError['stage'];
@@ -64,6 +65,11 @@ export const ERROR_TABLE: Record<ErrorCode, ErrorEntry> = {
   MODEL_BAD_FORMAT: {
     stage: 'model',
     message: '판독 결과를 이해하지 못했습니다. 다시 시도하거나 영역을 다시 잡아주세요.',
+    action: '다시 시도',
+  },
+  MODEL_RATE_LIMITED: {
+    stage: 'model',
+    message: '요청이 너무 잦습니다. 잠시(1분 정도) 기다렸다가 다시 시도해주세요.',
     action: '다시 시도',
   },
 };
