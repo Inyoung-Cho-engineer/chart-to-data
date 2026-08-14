@@ -21,3 +21,12 @@ clawd-on-desk/
 .bkit/runtime/
 .bkit/audit/
 .claude/settings.local.json
+
+# 이 프로젝트와 무관한 별도 저장소 (삭제하지 않고 제외만)
+clawd-on-desk/
+
+# Vercel CLI 로컬 설정
+.vercel/
+
+.vercel
+.env*

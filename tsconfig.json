@@ -30,5 +30,7 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "trash-can"]
+  // clawd-on-desk: 이 프로젝트와 무관한 별도 저장소가 폴더 안에 들어와 있다.
+  // 지우지 않고 타입 검사·빌드 대상에서만 뺀다 (있으면 빌드가 실패한다).
+  "exclude": ["node_modules", "trash-can", "clawd-on-desk"]
 }
